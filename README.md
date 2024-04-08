@@ -16,7 +16,7 @@ After setting up the userscript manager, you can install any script directly fro
 
 | Script Name                | Install Link                                              |
 |----------------------------|-----------------------------------------------------------|
-| Instagram Unfollowers      | [install](https://github.com/adrian-cancio/UserScripts/raw/master/scripts/instagram-unfollowers.js) |
+| Instagram Unfollowers      | [install](https://github.com/adrian-cancio/UserScripts/raw/master/scripts/instagram-unfollowers.user.js) |
 
 ## Updating
 
