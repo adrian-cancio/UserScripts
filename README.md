@@ -17,6 +17,7 @@ After setting up the userscript manager, you can install any script directly fro
 | Script Name                | Install Link                                              |
 |----------------------------|-----------------------------------------------------------|
 | Instagram Unfollowers      | [install](https://github.com/adrian-cancio/UserScripts/raw/master/scripts/instagram-unfollowers.user.js) |
+| AliExpress Wishlist Total  | [install](https://github.com/adrian-cancio/UserScripts/raw/master/scripts/aliexpress-wishlist-total.user.js) |
 
 ## Updating
 
