@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          AliExpress Wishlist Total
 // @namespace     https://github.com/adrian-cancio
-// @version       2024-10-27
+// @version       2025-10-26
 // @description   Calculates and displays the total price of items in your AliExpress wishlist
 // @license       MIT
 // @author        Adrián Cancio
