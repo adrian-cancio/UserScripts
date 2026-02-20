@@ -29,7 +29,9 @@
     COMMIT_SHA: 'ig_unfollowers_commit_sha',
     SCRIPT: 'ig_unfollowers_script',
     ICON: 'ig_unfollowers_icon',
-    LAST_CHECK: 'ig_unfollowers_last_check'
+    LAST_CHECK: 'ig_unfollowers_last_check',
+    BUTTON_X: 'ig_unfollowers_button_x',
+    BUTTON_Y: 'ig_unfollowers_button_y'
   };
 
   // GitHub API configuration
@@ -120,11 +122,69 @@
     if (el.style.display === "block") {
       return;
     }
+
+    // Restore saved position
+    const savedX = GM_getValue(CACHE_KEYS.BUTTON_X, null);
+    const savedY = GM_getValue(CACHE_KEYS.BUTTON_Y, null);
+    if (savedX !== null && savedY !== null) {
+      el.style.top = 'auto';
+      el.style.right = 'auto';
+      el.style.left = savedX + 'px';
+      el.style.top = savedY + 'px';
+    }
+
     el.style.display = "block";
     el.style.opacity = 0;
-    el.onclick = function () {
-      runUnfollowersScript();
-    };
+
+    // Drag state
+    var isDragging = false;
+    var wasDragged = false;
+    var startX, startY, origX, origY;
+    const DRAG_THRESHOLD = 5;
+
+    el.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      isDragging = true;
+      wasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      var rect = el.getBoundingClientRect();
+      origX = rect.left;
+      origY = rect.top;
+      el.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', function (e) {
+      if (!isDragging) return;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
+        wasDragged = true;
+      }
+      if (wasDragged) {
+        var newX = Math.max(0, Math.min(window.innerWidth - 60, origX + dx));
+        var newY = Math.max(0, Math.min(window.innerHeight - 60, origY + dy));
+        el.style.right = 'auto';
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
+      }
+    });
+
+    document.addEventListener('mouseup', function () {
+      if (!isDragging) return;
+      isDragging = false;
+      el.style.cursor = 'pointer';
+      if (wasDragged) {
+        // Save position
+        var rect = el.getBoundingClientRect();
+        GM_setValue(CACHE_KEYS.BUTTON_X, rect.left);
+        GM_setValue(CACHE_KEYS.BUTTON_Y, rect.top);
+      } else {
+        runUnfollowersScript();
+      }
+    });
+
+    // Fade in
     (function fade() {
       var val = parseFloat(el.style.opacity);
       if (!((val += 0.01) > 1)) {
@@ -377,7 +437,7 @@
     opacity: 0;
     z-index: 9999;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+    transition: box-shadow 0.3s ease, border-color 0.3s ease;
     pointer-events: none;
     border: 2px solid #444;
   `;
@@ -415,10 +475,9 @@
         div.innerHTML = fallbackIcon;
       }
 
-      // Add hover effects
+      // Add hover effects (no transform to avoid interfering with drag position)
       div.addEventListener('mouseenter', () => {
         if (!div.classList.contains('error')) {
-          div.style.transform = 'scale(1.1)';
           div.style.boxShadow = '0 6px 25px rgba(0, 0, 0, 0.6), 0 4px 12px rgba(255, 255, 255, 0.1)';
           div.style.borderColor = '#666';
         }
@@ -426,7 +485,6 @@
 
       div.addEventListener('mouseleave', () => {
         if (!div.classList.contains('error')) {
-          div.style.transform = 'scale(1)';
           div.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)';
           div.style.borderColor = '#444';
         }
@@ -490,6 +548,12 @@
       console.log('%c✓ Cache cleared! Reload the page to fetch fresh data.', 'color: #00FF00; font-weight: bold;');
     },
 
+    resetPosition: function() {
+      GM_setValue(CACHE_KEYS.BUTTON_X, null);
+      GM_setValue(CACHE_KEYS.BUTTON_Y, null);
+      console.log('%c✓ Button position reset! Reload the page.', 'color: #00FF00; font-weight: bold;');
+    },
+
     forceUpdate: function() {
       this.clearCache();
       console.log('%c🔄 Cache cleared. Reloading page...', 'color: #FFB800; font-weight: bold;');
@@ -508,7 +572,8 @@
   // Log helper availability
   console.log('%c💡 Instagram Unfollowers Debug Tools Available!', 'color: #00FFFF; font-weight: bold; font-size: 12px;');
   console.log('%cUse in console:', 'color: #888;');
-  console.log('  InstagramUnfollowersDebug.showCache()    - Show cache info');
-  console.log('  InstagramUnfollowersDebug.clearCache()   - Clear cache');
-  console.log('  InstagramUnfollowersDebug.forceUpdate()  - Force update & reload');
+  console.log('  InstagramUnfollowersDebug.showCache()      - Show cache info');
+  console.log('  InstagramUnfollowersDebug.clearCache()     - Clear cache');
+  console.log('  InstagramUnfollowersDebug.forceUpdate()    - Force update & reload');
+  console.log('  InstagramUnfollowersDebug.resetPosition()  - Reset button position');
 })();
