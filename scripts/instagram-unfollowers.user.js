@@ -298,7 +298,7 @@
     }
   }
 
-  // Run the unfollowers script by injecting a <script> element to bypass CSP eval restrictions
+  // Run the unfollowers script using a Blob URL to bypass CSP restrictions
   const runUnfollowersScript = () => {
     if (!cachedScript) {
       console.warn("Script not loaded yet. Please wait...");
@@ -306,10 +306,20 @@
     }
 
     try {
+      const blob = new Blob([cachedScript], { type: 'application/javascript' });
+      const url = URL.createObjectURL(blob);
       const scriptEl = document.createElement('script');
-      scriptEl.textContent = cachedScript;
+      scriptEl.src = url;
+      scriptEl.onload = () => {
+        scriptEl.remove();
+        URL.revokeObjectURL(url);
+      };
+      scriptEl.onerror = () => {
+        scriptEl.remove();
+        URL.revokeObjectURL(url);
+        console.error("Failed to execute Instagram Unfollowers script via Blob URL");
+      };
       document.head.appendChild(scriptEl);
-      scriptEl.remove();
     } catch (error) {
       console.error("Error executing Instagram Unfollowers script:", error);
       alert("Error executing Instagram Unfollowers. Please check the console for details.");
