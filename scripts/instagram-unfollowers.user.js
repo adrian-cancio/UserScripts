@@ -298,7 +298,7 @@
     }
   }
 
-  // Run the unfollowers script
+  // Run the unfollowers script by injecting a <script> element to bypass CSP eval restrictions
   const runUnfollowersScript = () => {
     if (!cachedScript) {
       console.warn("Script not loaded yet. Please wait...");
@@ -306,7 +306,10 @@
     }
 
     try {
-      eval(cachedScript);
+      const scriptEl = document.createElement('script');
+      scriptEl.textContent = cachedScript;
+      document.head.appendChild(scriptEl);
+      scriptEl.remove();
     } catch (error) {
       console.error("Error executing Instagram Unfollowers script:", error);
       alert("Error executing Instagram Unfollowers. Please check the console for details.");
