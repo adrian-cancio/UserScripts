@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name          Unfollowers Button
 // @namespace     https://github.com/adrian-cancio
-// @version       2025-10-26
+// @version       2026-02-20
 // @description   Adds a convenient button to Instagram to detect and list unfollowers quickly and easily.
 // @license       MIT
 // @author        Adrián Cancio
@@ -19,7 +19,6 @@
 (function () {
   "use strict";
 
-  var transitioning = false;
   var cachedScript = null;
   var cachedIcon = null;
   var isLoadingResources = false;
@@ -117,53 +116,24 @@
     console.log(`Cached resources (commit: ${commitSha.substring(0, 7)})`);
   }
 
-  function setDivVisibility(el) {
-    if (transitioning) {
+  function showButton(el) {
+    if (el.style.display === "block") {
       return;
     }
-
-    if (window.location.href === "https://www.instagram.com/") {
-      // Make the div visible with fade animation
-      if (el.style.display === "block") {
-        return;
+    el.style.display = "block";
+    el.style.opacity = 0;
+    el.onclick = function () {
+      runUnfollowersScript();
+    };
+    (function fade() {
+      var val = parseFloat(el.style.opacity);
+      if (!((val += 0.01) > 1)) {
+        setTimeout(() => {
+          el.style.opacity = val;
+        }, 1);
+        requestAnimationFrame(fade);
       }
-      el.style.display = "block";
-      el.style.opacity = 0;
-      transitioning = true;
-      (function fade() {
-        var val = parseFloat(el.style.opacity);
-        if (!((val += 0.01) > 1)) {
-          setTimeout(() => {
-            el.style.opacity = val;
-          }, 1);
-          requestAnimationFrame(fade);
-        }
-      })();
-      transitioning = false;
-      el.onclick = function () {
-        runUnfollowersScript();
-      };
-    } else {
-      // Fade out the div
-      if (el.style.opacity === 0) {
-        el.style.display = "none";
-        return;
-      }
-      transitioning = true;
-      el.onclick = null;
-      (function fadeOut() {
-        var val = parseFloat(el.style.opacity);
-        if ((val -= 0.01) > 0) {
-          setTimeout(() => {
-            el.style.opacity = val;
-          }, 1);
-          requestAnimationFrame(fadeOut);
-        } else {
-          el.style.display = "none";
-        }
-      })();
-      transitioning = false;
-    }
+    })();
   }
 
   // Extract script from davidarroyo1234's HTML
@@ -383,7 +353,7 @@
 
   div.style.cssText = `
     position: fixed;
-    bottom: 20px;
+    top: 20px;
     right: 20px;
     width: 60px;
     height: 60px;
@@ -472,10 +442,8 @@
 
   document.body.appendChild(div);
 
-  // Monitor visibility based on URL
-  setInterval(function () {
-    setDivVisibility(div);
-  }, 100);
+  // Show button immediately
+  showButton(div);
 
   // Debug helper - expose to window for console access
   window.InstagramUnfollowersDebug = {
